@@ -1,0 +1,24 @@
+	
+1	 studentid -- ID of Respondent
+	
+2	 surveydate -- Survey conducting day
+	
+3	 age -- Age of Respondent
+4	 ehpw -- Hours spent on extracurricular activities a week
+5	 hpw -- Hours spent on studying a week
+6	 hsleep -- Hours of sleep per day
+7	 GPA -- Grand point average of student [0-100] 
+	
+8	 gender -- 0:male, 1:female
+9	 job -- 1:Respondent has a job
+	0:Respondent does not have a job
+10	 type -- 0: part-time
+	1: full-time
+	
+11	 marital.status
+	single -- Respondent is single and has never been married
+	married -- Respondent is married
+	divorced -- Respondent is divorced or widowed
+	
+12	 imp -- Importance of geting/maintaining a high GPA (85 or greater)?
+	1: Not Important - 5: Very Important
