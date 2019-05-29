@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1558265247579.000,
+    "dirty" : true,
+    "encoding" : "ISO8859-1",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "C2B22821",
+    "lastKnownWriteTime" : 1558289119,
+    "last_content_update" : 1558289336531,
+    "path" : "C:/Users/Vazgen/Desktop/HW/R/Hw10_Vazgen/HW10.Rmd",
+    "project_path" : "HW10.Rmd",
+    "properties" : {
+        "cursorPosition" : "47,96",
+        "scrollLine" : "35"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

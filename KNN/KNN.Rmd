@@ -1,0 +1,190 @@
+---
+title: "KNN"
+author: "Vazgen Tadevosyan"
+date: "April 18, 2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+  <i>
+  You are required to submit both Markdown and HTML files. Data set (Spam E-mail Data) relevant for this assignment can be found in the R package "DAAG". 
+
+</i>
+
+  
+  <b style="color:green">
+  
+  Problem 1 (10 pt.)
+
+ * a. Suppose the sysadmin wants to understand and predict the process of recognizing the emails as spam for new e-mails which make up 20% of your initial data. Compare the performance of the logit and k-NN for classification on your data. Which one is better? Why?
+  (Use the ROC curve to find the best cutoff value and cross-validation for choosing the value of k. Show both results graphically).
+
+ * b. What are the differences **(at least 3)** of these algorithms (in general)?
+  
+  </b>
+  
+
+```{r,message=F,warning=F}
+library(ROCR)
+library(ggplot2)
+library(gridExtra)
+library(ggcorrplot)
+library(DAAG)
+library(caret)
+library(pROC)
+library(class)
+library(BBmisc)
+data("spam7")
+addmargins(table(spam7$yesno))
+set.seed(1)
+train_index<-createDataPartition(spam7$yesno,p = 0.7,list = F)
+train<-spam7[train_index,]
+test<-spam7[-train_index,]
+##Logit
+logit<-glm(yesno~.,data = train,family = 'binomial')
+predicted<-predict(logit,test,type = "response")
+predicted1<-ifelse(predicted>0.5,"y","n")
+confusionMatrix(factor(predicted1),test$yesno,positive = "y")
+R1<-ifelse(predicted1=="y",1,0)
+R2<-ifelse(test$yesno=="y",1,0)
+rrr1<-roc(R2,R1)
+g1<-ggroc(rrr1,alpha = 0.5, colour = "green", linetype = 1, size = 1)+ggtitle("ROC curve for Model Logistic")
+
+P_test<-ROCR::prediction(predicted,test$yesno)
+perf<-performance(P_test,'tpr','fpr')
+plot(perf,colorize=T)
+performance(P_test,'auc')@y.values
+FPR<-unlist(perf@x.values)
+TPR<-unlist(perf@y.values)
+alpha=unlist(perf@alpha.values)
+df<-data.frame(FPR,TPR,alpha)
+ggplot(df,aes(x=FPR,y=TPR,color=alpha)) + geom_line()+
+  theme_bw()+ labs(x="False Positive Rate",y="True Positive Rate",title="Roc Curve",color="Cutoff Values")
+
+##KNN
+data("spam7")
+
+spam7$crl.tot<-scale(spam7$crl.tot)
+set.seed(1)
+train_index<-createDataPartition(spam7$yesno,p = 0.7,list = F)
+train<-spam7[train_index,]
+test<-spam7[-train_index,]
+crtl<-trainControl(method = "cv",number = 5)
+
+```
+
+
+```{r,message=F,warning=F}
+knn_c<-train(yesno~.,data=train,trControl=crtl,tuneLength=5)
+plot(knn_c)
+knn1<-knn(train = train[,-7],test = test[,-7],cl = train$yesno,k=3)
+conf<-confusionMatrix(knn1,test$yesno,positive = "y")
+R11<-ifelse(knn1=="y",1,0)
+R22<-ifelse(test$yesno=="y",1,0)
+rrr2<-roc(R22,R11)
+g2<-ggroc(rrr2,alpha = 0.5, colour = "green", linetype = 1, size = 1)+ggtitle("ROC curve for Model KNN")
+
+
+grid.arrange(g1,g1)
+```
+
+Knn is better because Sensitivity and Accuracy scores are better than scores provided by Logit model.
+
+KNN is a non-parametric model, where LR is a parametric model.
+KNN is comparatively slower than Logistic Regression.
+KNN supports non-linear solutions where LR supports only linear solutions.
+LR can derive confidence level (about its prediction), whereas KNN can only output the labels.
+
+
+
+---------------------------------------------
+  
+  <b style="color:green">
+  
+  Problem 2 (10 pt.)
+
+ * a. Suppose the sysadmin wants to predict the total length of words in capitals (based on their content and type) for new e-mails which make up 20% of your initial data. Compare the result of the linear regression and k-NN regression by solving the task. Which one is better? (Use RMSE, R squared to solve the task.)
+
+ * b.  When will regression outperform the k-NN?
+ 
+</b>
+  
+
+  
+  
+  
+  
+```{r,message=F,warning=F}
+
+library(Metrics)
+data("spam7")
+set.seed(42)
+spam7$yesno<-ifelse(spam7$yesno=="y",1,0)
+index<-sample(nrow(spam7),nrow(spam7)*.8,replace = F)
+train<-spam7[index,]
+test<-spam7[-index,]
+OLS<-lm(crl.tot~.,data = train)
+summary(OLS)# Rsquared 0.08774
+OLS_PRED<-predict(OLS,test)
+rmse(actual = test$crl.tot,predicted = OLS_PRED)#531.2555
+
+head(train)
+grid<-expand.grid(k=5:10)
+set.seed(42)
+model<-train(
+ crl.tot~.,data=train,method='knn',
+ trControl=trainControl("cv",number = 4),
+ preProcess=c("center","scale"),
+ tuneGrid=grid
+)
+model
+```
+I choose k=5
+KNN regression provided better model Rmse is less that ols Rmse, regarding knn R_squared (0.3951279) is bigger than ols' one(0.08)
+
+When will regression outperform the k-NN?
+When assumptions of "LINE" is met OLS can outperform knn regression.
+  
+  
+----------------------------------------------
+  
+<b style="color:darkgreen">
+  
+  Bonus 1 (1 pt.)
+
+ * Calculate the Cohen's kappa value without additional functions.
+ * Explain the meaning of using kappa statistics.
+ 
+
+
+</b>
+----------------------------------------------
+```{r,message=F,warning=F}
+conf
+Po<-(767+429)/(767+114+69+429)
+Pyes<-((429+69 )/(767+114+69+429))*((429+114)/(767+114+69+429))
+Pno<-((767+114)/(767+114+69+429))*((767+ 69)/(767+114+69+429))
+Pe<-Pyes+Pno
+kappa<-(Po-Pe)/(1-Pe)
+kappa
+```
+ Cohen's Kappa is like classification accuracy, except that it is normalized at the baseline of random chance on your dataset. It is a more useful measure to use on problems that have an imbalance in the classes (e.g. 70-30 split for classes 0 and 1 and you can achieve 70% accuracy by predicting all instances are for class 0)
+The Kappa  will tell you how much better, or worse, your classifier is than what would be expected by random chance. If you were to randomly assign cases to classes (i.e. a kind of terribly uninformed classifier), you'd get some correct simply by chance. Therefore, you will always find that the Kappa value is lower than the overall accuracy. 
+
+
+
+<b style="color:darkgreen">
+
+Bonus 2 (2 pt.)
+
+Suppose we have one explanatory variable with equal values. 
+
+ * How can we use 1-NN to predict the response value of new observation with the same value of an explanatory variable? Is there any problem? 
+ 
+ * Do not use R to solve this task, or use it just as a supplementary tool.
+
+
+</b>
+The problem is that when new point comes distances will be the same with all existing points so it cannot chose the <strong>one</strong> closest neighbor as all are the same, so we should not have variables in our dataset that have variance equal to 0.
+
+

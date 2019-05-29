@@ -1,0 +1,15 @@
+Home Owner,Marital Status,Annual Income,Defaulted Borrower
+Yes,Single,125,No
+No,Married,100,No
+No,Single,70,No
+Yes,Married,120,No
+No,Divorced,150,Yes
+No,Married,60,No
+Yes,Divorced,220,No
+No,Single,85,Yes
+No,Married,75,No
+No,Single,90,Yes
+Yes,Divorced,180,Yes
+Yes,Divorced,200,No
+Yes,Married,250,No
+No,Married,50,Yes

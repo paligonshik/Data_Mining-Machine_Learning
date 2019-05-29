@@ -1,0 +1,167 @@
+---
+title: "Cluster Analysis"
+author: "Anna Khachatryan"
+date: "15/05/2019"
+output:
+  html_document:
+    df_print: paged
+---
+
+You are required to submit both Markdown and **PDF** files. 
+
+```{r include=FALSE}
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(cluster) #for computing fuzzy clustering
+library(factoextra)#for visualizing clusters
+library(class)
+```
+  
+
+**Problem 1 (7 pt.)**
+
+**a. What are the differences among exclusive, overlapping and fuzzy clustering? Bring an example of fuzzy clustering with k=2. Use the function funny() from library {cluster} and data visualization techniques from package {factoextra} to show your results. Show the membership matrix. Which of your observations belongs to both clusters.**
+
+<b>
+Exclusive - assign each object to a single cluster
+
+Overlapping - Point could reasonably be placed in more than one cluster (non-exclusive clustering). Simultaneously belong to more than one group
+
+Fuzzy - Every object belongs to every cluster with a membership weight that is between 0 (absolutely doesn't belong) and 1 (absolutely belongs). - does not address true multiclass situations.
+
+*Example*
+
+<br>
+
+```{r}
+df <- scale(USArrests)     # Standardize the data
+res.fanny <- fanny(df, 2)  # Compute fuzzy clustering with k = 2
+head(res.fanny$membership, 3) # Membership coefficients
+res.fanny$coeff # Dunn's partition coefficient
+head(res.fanny$clustering) # Observation groups
+
+fviz_cluster(res.fanny, ellipse.type = "norm", repel = TRUE,
+             palette = "jco", ggtheme = theme_minimal(),
+             legend = "right")
+```
+
+
+
+**b. Suppose we have an example of a data set with 20 observations. We need to cluster the data using the K-means algorithm. After clustering using k=1, 2, 3, 4 and 5 we obtained only one non-empty cluster. How is it possible?**
+
+<b>
+observations have the same value.
+<br>
+
+**c. Suppose we have an example of a data set consisting of three natural circular clusters. These clusters have the same number of points and have the same distribution. The centers of clusters lie on a line, the clusters are located such that the center of the middle cluster is equally distant from the other two. Why will not *bisecting* K-means find the correct cluster?**
+
+<b>
+Bisecting K-means performs several trial bisections and takes the one with the lowest SSE.
+The SSE is defined as the sum of the squared distance between each member of the cluster and its centroid.
+Considering that middle cluster is equally distant from the other two bisecting K-means will not find the correct cluster.
+<br>
+
+**Problem 2 (6 pt.)**
+
+ **Perform K-means clustering (manually:) using R), with K = 2, using data from the table with 2 features. **
+
+![](table.png)
+
+```{r}
+var1 <- c(2,2,8,0,7,0,1,7,3,9)
+var2 <- c(5,3,3,4,5,7,5,3,7,5)
+df <- data.frame(var1, var2)
+df
+```
+
+* **a. Plot the observations. **
+
+```{r}
+plot(df)
+```
+
+* **b. Randomly assign a cluster label to each observation. You can use the sample() command in R to do this. Report the cluster labels for each observation.**
+```{r}
+set.seed(1)
+clusters = sample(1:2, 10, replace = T)
+clusters
+col = rep("red", 10)
+col[clusters == 2] = "blue"
+pch = rep(16, 10)
+pch[clusters == 2] = 17
+plot(df, col = col, pch = pch)
+```
+
+* **c. Compute the centroid for each cluster.**
+```{r}
+centroids = aggregate(df, list(Cluster = clusters), mean)
+centroids
+plot(df, col = col, pch = pch)
+points(centroids[1,2:3], col = "red", pch = 8)
+points(centroids[2,2:3], col = "blue", pch = 8)
+```
+
+
+* **d. Assign each observation to the centroid to which it is closest, in terms of Euclidean distance. Report the cluster labels for each observation.**
+
+```{r}
+clusters = knn(centroids[,2:3], df, factor(centroids[,1]))
+clusters
+col = rep("red", 10)
+col[clusters == 2] = "blue"
+pch = rep(16, 10)
+pch[clusters == 2] = 17
+plot(df, col = col, pch = pch)
+```
+
+* **e. Repeat (c) and (d) until the answers obtained stop changing. **
+
+```{r}
+centroids = aggregate(df, list(Cluster = clusters), mean)
+centroids
+```
+
+```{r}
+plot(df, col = col, pch = pch)
+points(centroids[1,2:3], col = "red", pch = 8)
+points(centroids[2,2:3], col = "blue", pch = 8)
+```
+
+```{r}
+clusters = knn(centroids[,2:3], df, factor(centroids[,1]))
+clusters
+centroids = aggregate(df, list(Cluster = clusters), mean)
+centroids
+```
+
+* **f. In your plot from (a), color the observations according to the cluster labels obtained.**
+
+```{r}
+col = rep("red", 10)
+col[clusters == 2] = "blue"
+pch = rep(16, 10)
+pch[clusters == 2] = 17
+plot(df, col = col, pch = pch)
+points(centroids[1,2:3], col = "red", pch = 8)
+points(centroids[2,2:3], col = "blue", pch = 8)
+```
+
+
+**Problem 3 (7 pt.)**
+
+**Use the data from the World Value Survey (Wave 6) to understand the disposition of our country among others based on some criteria. The description of the variables and the survey are given with a separate file. Here is the link to obtain more information: http://www.worldvaluessurvey.org/wvs.jsp. Choose the subset from Wave 6 data to perform the cluster analysis. *Note* that you need to use meaningful selections both of variables (based on some theme/problem) and countries.** 
+
+* **a. Describe how and why you choose your subset of variables and observations. What is your goal?**
+* **b. Use all (appropriate) tools/functions from our lecture to cluster (both nested and untested algorithms) the countries. Interpret them.**
+**b1. Is your hierarchical clustering stable regards to between clusters distance measures?**
+**b2.Compare the results obtained from two different k-means.**
+* **c. Make the conclusion (also based on cluster centers).**
+
+**Bonus 1 (2 pt.)**
+
+**Show that the average pairwise distance between the points in a cluster is equivalent to the SSE of the cluster.**
+
+**Bonus 2**
+**Perform the cluster analysis using the attached .Rda file**
+  

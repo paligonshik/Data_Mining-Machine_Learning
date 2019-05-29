@@ -1,0 +1,224 @@
+---
+title: "Cluster Analysis"
+author: "Vazgen Tadevosyan"
+date: ' '
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+ 
+
+```{r include=FALSE}
+library(dplyr)
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(cluster) #for computing fuzzy clustering
+library(factoextra)#for visualizing clusters
+```
+  
+
+**Problem 1 (7 pt.)**
+
+**a. What are the differences among exclusive, overlapping and fuzzy clustering? Bring an example of fuzzy clustering with k=2. Use the function funny() from library {cluster} and data visualization techniques from package {factoextra} to show your results. Show the membership matrix. Which of your observations belongs to both clusters.**
+Exclusive clustering is as the name suggests and stipulates that each data object can only exist in one cluster.
+Overlapping  allows data objects to be grouped in 2 or more clusters.
+In Fuzzy clustering every data object belongs to every cluster.the major difference is that the data objects has a membership weight that is between 0 to 1 where 0 means it does not belong to a given cluster and 1 means it absolutely belongs to the cluster. Fuzzy clustering is also known as probabilistic clustering.
+Example, lets suppose we do on clustering on customers by dividing them into 2 groups and then label them as loyal or not loyal.
+So every customer have a certain probability of being each cluster for ex:(0.2 to be loyal, 0.8 to be unloyal).
+
+```{r}
+data("iris")
+iris.scaled <- scale(iris[, -5])
+obj<-cluster::fanny(iris.scaled,k=3)
+head(obj$membership)
+fviz_cluster(obj, ellipse.type = "norm")
+
+```
+From plot it is seen that there some observtion that could be in two clusters.
+
+
+**b. Suppose we have an example of a data set with 20 observations. We need to cluster the data using the K-means algorithm. After clustering using k=1, 2, 3, 4 and 5 we obtained only one non-empty cluster. How is it possible?**
+
+If it returns only one non empty cluster it means that other clusters are empty and the problem of empty clusters  occurs when the initial center vectors are such that any two or more of them are either equal or very close to each other. In such a situation, after assignment of data to clusters, data elements will be assigned to only one of the clusters with nearly equal centers, and the others remain empty.Another case will be when all obserations have the same value or it can be because of bad starting centroids.
+
+
+
+
+
+**c. Suppose we have an example of a data set consisting of three natural circular clusters. These clusters have the same number of points and have the same distribution. The centers of clusters lie on a line, the clusters are located such that the center of the middle cluster is equally distant from the other two. Why will not *bisecting* K-means find the correct cluster?**
+Because  neither on horisontal  nor  on vertical axeses it is indivisible. If one???
+
+
+
+
+**Problem 2 (6 pt.)**
+
+ **Perform K-means clustering (manually:) using R), with K = 2, using data from the table with 2 features. **
+
+![](table.png)
+
+* **a. Plot the observations. **
+* **b. Randomly assign a cluster label to each observation. You can use the sample() command in R to do this. Report the cluster labels for each observation.**
+* **c. Compute the centroid for each cluster.**
+* **d. Assign each observation to the centroid to which it is closest, in terms of Euclidean distance. Report the cluster labels for each observation.**
+
+* **e. Repeat (c) and (d) until the answers obtained stop changing. **
+* **f. In your plot from (a), color the observations according to the cluster labels obtained.**
+```{r}
+n=10
+a <- c(2,2,8,0,7,0,1,7,3,9)
+b <- c(5,3,3,4,5,7,5,3,7,5)
+df <- data.frame(a, b)
+plot(a,b)
+
+```
+```{r}
+clusters = sample(1:2, n, replace = T)
+clusters
+
+col = rep("red", 10)
+col[clusters == 2] = "blue"
+pch = rep(16, n)
+pch[clusters == 2] = 17
+plot(df, col = col, pch = pch)
+```
+
+
+```{r}
+centroids = aggregate(df, list(Cluster = clusters), mean)
+centroids
+plot(df, col = col, pch = pch)
+points(centroids[1,2:3], col = "red", pch = 8)
+points(centroids[2,2:3], col = "blue", pch = 8)
+```
+
+
+
+```{r}
+library(class)
+clusters = knn(centroids[,2:3], df, factor(centroids[,1]))
+clusters
+
+col = rep("red", n)
+col[clusters == 2] = "blue"
+pch = rep(16, n)
+pch[clusters == 2] = 17
+plot(df, col = col, pch = pch)
+```
+
+
+```{r}
+centroids = aggregate(df, list(Cluster = clusters), mean)
+centroids
+plot(df, col = col, pch = pch)
+points(centroids[1,2:3], col = "red", pch = 8)
+points(centroids[2,2:3], col = "blue", pch = 8)
+```
+
+
+
+```{r}
+clusters = knn(centroids[,2:3], df, factor(centroids[,1]))
+clusters
+
+centroids = aggregate(df, list(Cluster = clusters), mean)
+centroids
+col = rep("red", n)
+col[clusters == 2] = "blue"
+pch = rep(16, n)
+pch[clusters == 2] = 17
+plot(df, col = col, pch = pch)
+points(centroids[1,2:3], col = "red", pch = 8)
+points(centroids[2,2:3], col = "blue", pch = 8)
+```
+
+
+
+**Problem 3 (7 pt.)**
+
+**Use the data from the World Value Survey (Wave 6) to understand the disposition of our country among others based on some criteria. The description of the variables and the survey are given with a separate file. Here is the link to obtain more information: http://www.worldvaluessurvey.org/wvs.jsp. Choose the subset from Wave 6 data to perform the cluster analysis. *Note* that you need to use meaningful selections both of variables (based on some theme/problem) and countries.** 
+
+
+* **a. Describe how and why you choose your subset of variables and observations. What is your goal?**
+* **b. Use all (appropriate) tools/functions from our lecture to cluster (both nested and untested algorithms) the countries. Interpret them.**
+**b1. Is your hierarchical clustering stable regards to between clusters distance measures?**
+**b2.Compare the results obtained from two different k-means.**
+* **c. Make the conclusion (also based on cluster centers).**
+
+
+```{r}
+
+data<-readRDS("WVS.rds")
+
+
+data<-data[ , which(names(data) %in% c("V2","V4","V5","V6","V7","V8","V9","V10","V26","V27"))]
+dim(data)
+
+colnames(data)<-c("Country","family","friend","leisure","politics","work","religion","happiness","sport","art")
+df<-data %>%                  
+  group_by(Country) %>%
+  summarise_all("mean")
+
+df<-data %>%                  
+  group_by(Country) %>%
+  summarise_all("mean")%>%filter(Country %in% c(31, 51, 356, 392, 398, 417, 643, 840, 860,32,858,268,792))
+df$Country<-c("Azerbejan","Argentina","Armenia","Georgia","India","Japan","Kazaxstan","Kghrghrstan","Russia","Turkey","Usa","Urugvay","Uzbegstan")
+head(df)
+```
+
+The chosen variables were selected in a way not to have correleted ones. See in the documentation.
+Now lets do clusterinbg.
+
+
+
+
+b.
+```{r}
+df$Country<-NULL
+d<-dist(df,method = "euclidian")
+
+c1<-hclust(d,method="complete")
+plot(c1)
+
+
+```
+We got  plot and as you can see that we are very similar to our neighbors Turkey and Georgia. But interestingly Turkey is not in the same class with Azers. The one that is very different from the others is JAPONIA.
+
+b1.
+```{r}
+c1$height
+```
+
+Yes it is stable.
+
+
+```{r}
+#clust<-
+df2<-  df[complete.cases(df),]
+km<-kmeans(df2,3)
+km$centers
+fviz_cluster(km,data=df)
+```
+Meaninful plot as Japan and USA are different from others.
+
+```{r}
+library(factoextra)
+set.seed(1)
+fviz_nbclust(df,kmeans,method = "wss")
+
+
+```
+Optimanl number of clusters seems to be 4.
+
+
+```{r}
+df2<-  df[complete.cases(df),]
+km<-kmeans(df2,4)
+km$centers
+fviz_cluster(km,data=df)
+```
+In this case it is very similar to dendogram plot because Japan was in only one in cluster. But now we countries that are closer to forein clusters'point than their centroids.
+

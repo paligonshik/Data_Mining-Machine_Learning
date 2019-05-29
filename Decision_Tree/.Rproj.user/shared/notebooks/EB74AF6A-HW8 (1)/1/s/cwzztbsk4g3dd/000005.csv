@@ -1,0 +1,2 @@
+"0","model_min <- rpart(yesno~., minsplit=nrow(spam7)*0.25, data= train)"
+"0","prp(model_min, type = 2, extra = 1, main = ""Number of observations that fall in the node per class with / min set-up"")"

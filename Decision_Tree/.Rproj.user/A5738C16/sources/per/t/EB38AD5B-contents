@@ -1,0 +1,152 @@
+---
+title: "HW8"
+author: "Vazgen Tadevosyan"
+date: "April 28, 2019"
+output: html_document
+---
+<i>
+You are required to submit both Markdown and HTML files. Data set (Spam E-mail Data) relevant for this assignment can be found in the R package "DAAG". 
+</i>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(DAAG)
+library(rpart)
+library(rpart.plot)
+library(rattle)
+library(dplyr)
+library(caret)
+library(GGally)
+library(pROC)
+library(gridExtra)
+```
+
+----------------------------------------
+Problem 1 (7 pt.)
+
+Consider the training examples shown in the table for a binary classification problem: <br>
+
+![](Capture.PNG)
+<p>
+a.  What is the best split (between a1 and a2) according to the classification error rate? Show calculations in R.
+b. What is the best split (between a1 and a2) according to the Gini index? Show calculations in R. Which attribute would the decision tree algorithm choose? Why?
+c. Why does not entropy start with 0?
+d. Why DT is called a greedy algorithm?
+
+----------------------------------------
+
+a.
+```{r}
+class_err_a1<-1-max(7/9,2/9)
+class_err_a2<-1-max(5/9,4/9)
+class_err_a1<class_err_a2
+```
+The best split is a1 as classification rate error is less than a2.
+
+b.
+```{r}
+a1<-1-((7/9)^2+(2/9)^2)
+a2<-1-((5/9)^2+(4/9)^2) 
+a1<a2
+```
+the best split is a1 again because gini index was lower than a2.
+
+
+c.
+$entropy(A)=-\sum_{k = 1}^{m} p_k*log_2(p_k) $
+So when we $P_k=0$ we will have $log_2(p_k)=-inf$
+So it does not start from 0.
+
+d.
+it is  making the locally optimal choice at each stage the algorithm doesn’t consider the larger problem as a whole. Once a decision has been made, it is never reconsidered.
+
+Problem 2 (6 pt.)
+
+a. Suppose the sysadmin wants to understand and predict the process of recognizing the emails as spam for new e-mails which make up 10% of your initial data. Use the full decision tree algorithm to solve this task. Show your tree and interpret the results. <br>
+b. How many observations have your smallest node? Set the minimum number of observations in any terminal node 25% of the number of your initial data. Show the tree. Why do we need the arguments minbucket
+and minsplit?<br>
+c. Which are the advantages and disadvantages (at least 2 of each) of the DT algorithm? 
+
+a.
+```{r}
+data("spam7")
+set.seed(1)
+colnames(train)
+train_index<-createDataPartition(spam7$yesno,p = 0.9,list = F)
+train<-spam7[train_index,]
+test<-spam7[-train_index,]
+full<-rpart(yesno~.,data = train)
+prp(full)
+```
+
+DT algorithm used DOllar, crt.tot,money, bang attributes to split. There is 7 leaf nodes and 5 child nodes.
+
+
+```{r}
+asRules(full)
+```
+So when dollar number of occurrences of the bang >=0.0785 and dollar>=0.0065 it classified as spam with probability 0.96, and so on.
+
+
+b.
+```{r}
+prp(full,extra = 1)
+```
+In the smallest node we have 24 observations.
+```{r}
+model<-rpart(yesno~.,data = train,minbucket=nrow(train)*0.25)
+prp(model)
+
+```
+We need to use minbucket and minsplit to handle problem with overfitting.
+Disadvantages
+There is a high probability of overfitting in Decision Tree.
+Calculations can become complex when there are many class labels.
+It uses Greedy algorithm
+
+Advantages.
+Decision Trees are easy to explain. It results in a set of rules.
+It follows the same approach as humans generally follow while making decisions.
+We can represent information graphically.
+----------------------------------------
+
+
+Problem 3 (7 pt.)
+
+a. Make predictions based on both models.
+b. Compare the models using the function confusionMatrix() and their results, ROC curve, and AUC. Which does perform better? Why? 
+c. What is the difference between regression and classification trees (in terms of the loss function, prediction, and type of dependent variable)?
+
+
+```{r}
+full_pred<-predict(full,test,type = "prob")
+model_pred<-predict(model,test,type = "prob")
+pred_f<-factor(ifelse(full_pred[,2]>0.5,"y","n"))
+pred_m<-factor(ifelse(model_pred[,2]>0.5,"y","n"))
+confusionMatrix(pred_f,test$yesno,positive = "y")
+confusionMatrix(pred_m,test$yesno,positive = "y")
+rrr<-roc(test$yesno,full_pred[,2])
+g1<-ggroc(rrr,alpha = 0.5, colour = "green", linetype = 1, size = 1)+ggtitle("ROC curve for full")
+rrr1<-roc(test$yesno,model_pred[,2])
+g2<-ggroc(rrr1,alpha = 0.5, colour = "green", linetype = 1, size = 1)+ggtitle("ROC curve for Model")
+auc(rrr)
+auc(rrr1)
+grid.arrange(g1, g2,nrow=1)
+
+```
+Overall Full model predict better as almost all metrics are better than metrics provided model.Only sensitivity is a little lower 
+than the model's score. AUC for full model(0.87) is larger than model's AUC (0.77)
+c.dependent cariable is numeric for  refression and categorical for decishion tree. Loss function for LR is minimizing squared residuals, for decision tree it is Misclassification cost,regression  predicts a quantitative variable decision tree  a qualitative variable.
+
+
+
+----------------------------------------
+Bonus 1 (2 pt.)
+
+Bring an example of a data set that cannot be partitioned effectively by a DT algorithm using test conditions involving only a single attribute. How can you overcome this difficulty?
+
+Bonus 2 (2 pt.)
+
+How to calculate the out-of-bag error rate.
+What is the difference between out-of-bag error and test error in Random Forest?

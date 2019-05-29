@@ -1,0 +1,10 @@
+"0","data(""spam7"")"
+"0","set.seed(1)"
+"0","colnames(train)"
+"1","NULL
+"
+"0","train_index<-createDataPartition(spam7$yesno,p = 0.9,list = F)"
+"0","train<-spam7[train_index,]"
+"0","test<-spam7[-train_index,]"
+"0","full<-rpart(yesno~.,data = train)"
+"0","prp(full)"

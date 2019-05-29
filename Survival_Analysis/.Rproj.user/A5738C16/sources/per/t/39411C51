@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1554919053154.000,
+    "dirty" : false,
+    "encoding" : "ISO8859-1",
+    "folds" : "",
+    "hash" : "2677773686",
+    "id" : "39411C51",
+    "lastKnownWriteTime" : 1554919481,
+    "last_content_update" : 1554919481715,
+    "path" : "C:/Users/Vazgen/Desktop/HW/R/HW6_Vazgen/HW6.Rmd",
+    "project_path" : "HW6.Rmd",
+    "properties" : {
+        "cursorPosition" : "16,42",
+        "scrollLine" : "14"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

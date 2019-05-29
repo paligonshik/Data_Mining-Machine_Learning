@@ -1,0 +1,200 @@
+---
+title: "Naive Bayes"
+author: "VAZGEN TADEVOSYAN"
+date: "May 13, 2019"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+You are required to submit both Markdown and PDF files.
+Problem 1 (10 pt.)
+a. Explain the Naive Bayes algorithm. What are the prior, posterior, class-conditional probabilities?
+Why do we need to maximize only the numerator term?
+
+
+Naive Bayes is a kind of classifier which uses the Bayes Theorem. It predicts membership probabilities for each class such as the probability that given record or data point belongs to a particular class.
+
+Suppose following formula.
+
+$$P(c|x)= \frac{P(x|c)*P(c)}{P(x)}$$
+We are trying to get probability that observation is class "c" given given predictor "x".
+There is interest only in the numerator of that fraction, because the denominator does not depend on ${\displaystyle C}$ C and the values of the features $ x_{i}$ are given, so that the denominator is effectively constant. The numerator is equivalent to the joint probability model.
+
+
+The posterior probability, in the context of a classification problem, can be interpreted as: "What is the probability that a particular object belongs to class i given its observed feature values?"
+In our case posterior probability is $P(c|x)$
+
+Prior Probability
+In the context of pattern classification, the prior probabilities are also called class priors, which describe "the general probability of encountering a particular class."
+
+In our case prior probability is $P(c)$
+
+$P(x|c)$ is the likelihood which is the probability of predictor given class class-conditional probability.
+
+b. We have the dataset from figure1. Suppose we are given a test record with the following attribute set:
+X: (Hone Owner: Yes, Marital Status: Single, Annual Income: 158). Classify the records Based on
+Naive Bayes. Show all calculations of all class-conditional, prior, posterior probabilities.
+```{r}
+library(gtools)
+HomeOwner<-c("Yes","No","No","Yes","No","No","Yes","No","No","No","Yes","Yes","Yes","No")
+Marital_Status<-c("Single","Married","Single","Married","Divorced","Married","Divorced","Single","Married","Single","Divorced","Divorced","Married","Married")
+Annul_Income<-c(125,100,70,120,150,60,220,85,75,90,180,200,250,50)
+Annul_Income<-quantcut(Annul_Income,3,labels=c("low","medium","high"))
+
+
+
+Default<-c("No","No","No","No","Yes","No","No","Yes","No","Yes","Yes","No","No","Yes")
+table(Default)
+addmargins(table(Default,HomeOwner))
+addmargins(table(Default,Marital_Status))
+addmargins(table(Default,Annul_Income))
+P_defY_Homeyes<-1/5
+P_defY_Marit_Sing<-2/5
+P_defY_Inc_High<-2/5
+P_defY<-5/14
+h_yes<-prod(P_defY_Homeyes,P_defY_Marit_Sing,P_defY_Inc_High,P_defY)
+
+P_defN_Homeyes<-5/9
+P_defN_Marit_Sing<-2/9
+P_defN_Inc_High<-3/9
+P_defN<-9/14
+h_no<-prod(P_defN_Homeyes,P_defN_Marit_Sing,P_defN_Inc_High,P_defN)
+max(h_no,h_yes)
+h_yes/sum(h_no,h_yes)+h_no/sum(h_no,h_yes)## indicates we calculated right.
+```
+
+The observation's default  is predicted as no
+
+
+c. Bring an example of conditionally independent random variables.
+
+ A(I am late for class) and {Levon is  late for class} B are conditionally independent given {car crash in Baghramian} C if and only if, given knowledge that crash  occurs, knowledge of whether I am late or not  provides no information on the likelihood of Levon is being late , and knowledge of whether Levon is late   provides no information on the likelihood of me being late.
+
+
+Problem 2 (10 pt.)
+Data set (Well Switching in Bangladesh) relevant for this problem can be found in the R package "carData".
+```{r}
+library(carData)
+data("Wells")
+head(Wells)
+```
+
+
+a. Choose the predictors and the target variable. Make appropriate visualization (boxplot and density
+plots) for understanding the relationship between them. Comment on it.
+
+
+```{r}
+library(ggplot2)
+
+library(gridExtra)
+g1 = ggplot(data = Wells, aes(y = arsenic, x = switch,color = switch))+geom_boxplot()+
+  scale_x_discrete(labels= levels(Wells$switch) )+
+  stat_summary(fun.y = "mean",geom = 'point',col='red', shape=17, size=4)+
+  labs(title ="Arsenic by switch " ,color =  "switch",y='Arsenic',x="switch")+
+  theme(plot.title = element_text(hjust = 0.5))
+g2 = ggplot(data = Wells, aes(y = distance, x = switch,color = switch))+geom_boxplot()+
+  scale_x_discrete(labels= levels(Wells$switch) )+
+  stat_summary(fun.y = "mean",geom = 'point',col='red', shape=17, size=4)+
+  labs(title ="Distance by switch " ,color =  "switch",y='Distance',x="switch")+
+  theme(plot.title = element_text(hjust = 0.5))
+g3 = ggplot(data = Wells, aes(y = education, x = switch,color = switch))+geom_boxplot()+
+  scale_x_discrete(labels= levels(Wells$switch) )+
+  stat_summary(fun.y = "mean",geom = 'point',col='red', shape=17, size=4)+
+  labs(title ="Education by switch " ,color =  "switch",y='Education',x="switch")+
+  theme(plot.title = element_text(hjust = 0.5))
+g4=ggplot(Wells,aes(arsenic))+geom_density()+facet_grid(.~switch)+ggtitle("Density of Distance by Switch")
+ 
+grid.arrange(g1, g2, g3,g4,nrow=2)
+
+colnames(Wells)
+```
+
+It is seen from the plot that numeric variables are not significantly different by switch variable however
+Arsenic and Education tend to be higher for an switched household than unswitched.
+From the Density plot it is seen that  switch yes is wider than switch no. Switch yes has more variance than switch no.
+
+
+
+
+
+
+
+b. Calculate prior probabilities using the naiveBayes() function.
+```{r}
+library(e1071)
+library(caret)
+set.seed(1)
+index<- createDataPartition(Wells$switch, p=0.8, list=F)
+
+train<-Wells[index,]
+test<-Wells[-index,]
+
+model<-naiveBayes(switch~., data=train, laplace = 1)
+names(model)
+model$apriori
+p_yes<-model$apriori[2]/sum(model$apriori)
+p_no<-model$apriori[1]/sum(model$apriori)
+print(paste("Prior probabity for switch yes is",p_yes))
+
+
+```
+
+
+
+
+c. Describe and interpret the table from your output of your model (for one categorical, one numeric
+variables)
+
+```{r}
+model$tables$association
+```
+Probability of  switch_yes given association no is  0.5797414
+
+```{r}
+model$tables$distance
+```
+For numeric variable we should calulate z-score. Mean and Standard Deviation is given per group in table.
+For example,suppose new observation come it's distance is 40.
+Probability of that it switched yes should be calculated as follows
+We should get z score and then get probability but in R we easily use pnorm, ouput will be the same.
+```{r}
+pnorm(40,mean = 44.84026,sd = 34.42759)
+```
+
+
+
+
+
+d. Make a prediction using the Naive Bayes Algorithm. Can the prior probabilities influence on the final
+result? Check the goodness of prediction on test data.
+
+
+```{r}
+predicted<-predict(model,test,type = "raw")
+pred_test<-ifelse(predicted[,2]>.5,"yes","no")
+pred_test<-as.factor(pred_test)
+confusionMatrix(pred_test,test$switch,positive = "yes")
+```
+Overall model accuracy is 0.6368 , which is very good if we take the portion of classes into account (43% 57% ).Sensitiviy score is 0.85 which is better than our benchmark for positive case (0.57)
+We are interested in predicting yes so we should pay attention to sensitivity which measures the proportion of actual positives that are correctly identified as such.
+
+```{r}
+library(pROC)
+rrr1<-roc(test$switch,predicted[,2])
+rrr1
+g2<-ggroc(rrr1,alpha = 0.5, colour = "green", linetype = 1, size = 1)+ggtitle("ROC curve for Model AIC")
+g2
+
+```
+Area under the curve is 0.6758 
+$$P(c|x)= \frac{P(x|c)*P(c)}{P(x)}$$
+
+Yes Prior probability can influence the final result as it is part of the equation.
+
+
+
+
+
+1

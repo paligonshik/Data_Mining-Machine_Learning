@@ -1,0 +1,85 @@
+"0","asRules(full)
+"
+"1","
+"
+"1"," Rule number: 7 "
+"1","[yesno=y cover=842 (20%) prob=0.96]
+"
+"1","   bang>=0.0785
+"
+"1","   dollar>=0.0065
+"
+"1","
+"
+"1"," Rule number: 53 "
+"1","[yesno=y cover=24 (1%) prob=0.96]
+"
+"1","   bang>=0.0785
+"
+"1","   dollar< 0.0065
+"
+"1","   crl.tot>=85.5
+"
+"1","   bang< 0.1955
+"
+"1","   money>=0.095
+"
+"1","
+"
+"1"," Rule number: 27 "
+"1","[yesno=y cover=280 (7%) prob=0.85]
+"
+"1","   bang>=0.0785
+"
+"1","   dollar< 0.0065
+"
+"1","   crl.tot>=85.5
+"
+"1","   bang>=0.1955
+"
+"1","
+"
+"1"," Rule number: 5 "
+"1","[yesno=y cover=209 (5%) prob=0.70]
+"
+"1","   bang< 0.0785
+"
+"1","   dollar>=0.081
+"
+"1","
+"
+"1"," Rule number: 52 "
+"1","[yesno=n cover=113 (3%) prob=0.34]
+"
+"1","   bang>=0.0785
+"
+"1","   dollar< 0.0065
+"
+"1","   crl.tot>=85.5
+"
+"1","   bang< 0.1955
+"
+"1","   money< 0.095
+"
+"1","
+"
+"1"," Rule number: 12 "
+"1","[yesno=n cover=488 (12%) prob=0.32]
+"
+"1","   bang>=0.0785
+"
+"1","   dollar< 0.0065
+"
+"1","   crl.tot< 85.5
+"
+"1","
+"
+"1"," Rule number: 4 "
+"1","[yesno=n cover=2186 (53%) prob=0.10]
+"
+"1","   bang< 0.0785
+"
+"1","   dollar< 0.081
+"
+"1","
+"

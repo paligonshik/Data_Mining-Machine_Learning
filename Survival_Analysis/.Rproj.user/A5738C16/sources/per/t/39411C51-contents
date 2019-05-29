@@ -1,0 +1,62 @@
+---
+title: "Homework Assignment 6"
+author: "Vazgen Tadevosyan"
+date: " "
+output: html_document
+---
+
+You are required to submit both Markdown and HTML files with your answers and code in it. Do not remove problems from your Markdown file. Please write your name at the beginning of your file into the YAML-header inside of author. 
+
+Data set relevant for this assignment can be found on Moodle. The description of the variables is given in a separate file. 
+
+Good luck!
+
+```
+                                               Task 1   (4 pt.)
+a. Clean and describe the final data. Which of variables can be useful for survival analysis? Why? Which of them can be an event indicator?
+b. What is the difference between interval censored and point censored data?
+c. What are the mail causes of censored data (right-censored)? Why  cannot we ignore censoring, bring and example?
+
+```
+```{r}
+library(ggplot2)
+df<-read.csv("survdata.csv")
+str(df)
+df$X<-NULL
+
+```
+
+
+```
+                                               Task 2   (6 pt.)
+  Create survival object to solve the task, use the KM method.
+  
+  a. What is the probability of surviving to a certain point in time (baseline model without predictors)? Use n.risk and n.event of summary function to comment on this task. 
+  b. Why is the KM model called non-parametric?
+  c. Plot the survival probability and cumulative hazard functions. Comment on it.
+  d. Add independent variable/s (with more than 2 categories) to your model to create survival curves for different groups. 
+  e. Find the variable with significant differences in survival probabilities. Show the survival plot and add a risk table to the graph. Comment on it.
+                                               
+                                               
+```
+
+```
+                                               Task 3   (4 pt.)
+a. Run the ATF model with independent variables (at least one numeric and one categorical). Overall model and coefficients must be significant. Interpret the coefficients.
+b. Make predictions based on your model using quantiles. Why do we not use the predict function?
+c. Plot probability of a hazard and survival. Comment on it.
+
+
+```
+
+```
+                                               Task 4   (6 pt.)
+
+a. Which are the key assumptions of the Cox model?
+b. Run the Cox proportional hazard model with significant coefficients. What does Rsquare show? 
+c. Interpret the coefficients of your model. What does HR indicate?
+d. Check the proportional hazard assumption. Comment on it.
+e. Make predictions with cox model using plots.
+
+```
+

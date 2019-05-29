@@ -1,0 +1,86 @@
+---
+title: "Homework 5"
+author: "Vazgen Tadevosyan"
+date: "March 26, 2019"
+output: html_document
+---
+```
+For this Homework, you are required to submit both Markdown and HTML files with your answers and code in it. Be sure that the .Rmd file is working, so when I run it, there would be no errors and represent the same information as HTML. Write your code and interpretations under each question. The interpretations of the results need to be written below or above all the charts, summaries, or tables. Do not remove problems from your Markdown file. 
+
+Use movies_data.xls dataset uploaded on Moodle to analyze the relationship between the target variable and different factors. The description of the variables is given in a separate file. Pay close attention to the names of axes, titles, and labels. <p>
+```
+
+<b> Problem 1. 3 pt. </b> <p>
+```
+a. Fit a linear model using least squares on the training set, and report the test error obtained. 
+b. What is regularization? Why we need it?
+
+```
+
+
+a.
+```{r}
+library(readxl)
+library(dplyr)
+library(plyr)
+library(zoo)
+library(Metrics)
+data<-read_excel("movies_data.xls",na=c('#DIV/0',"#DIV/0!","#NAME?", 'NA',"N/A",""," "))
+data$genre_first<-factor(data$genre_first)
+data$Country<-factor(data$Country)
+data$Rated<-factor(data$Rated)
+data$Rated<-revalue(data$Rated, c("NOT RATED"="UNRATED"))
+data$genre_first<-factor(data$genre_first)
+data$Production<-factor(data$Production)
+data$OscarWon<-factor(data$OscarWon)
+data$Oscar_binary<-ifelse(data$OscarNom==0,0,1)
+data<-data%>% mutate_if(is.numeric , na.aggregate)
+data<-na.omit(data)
+df<-data %>% dplyr::select(-c(Writer,Production,index,Country,Director,Plot,Language,Awards,gross,budget,Release,DVD,Release_Month,Release_Day,Release_year,Actors,Genre,title))
+set.seed(42)
+index<-sample(nrow(df),nrow(df)*.75,replace = F)
+train<-df[index,]
+test<-df[-index,]
+colnames(df)
+head(df)
+model<-lm(log(gross_adjusted)~genre_first+imdbRating+year+log(budget_adjusted),data = train)
+pred<-exp(predict(model,test))
+actual<-test$gross_adjusted
+rmse(actual,pred)
+```
+b.
+Regularization is a technique that is used to avoid overfitting. It introduces small amount of bias into how nwe line is fit to the data.But in return for that we get a significant driop in Variance.
+
+
+<b>Problem 2. 5 pt. </b> <p>
+```
+a. Fit a ridge regression model on the training set, with lambda chosen by cross-validation. Report the test error obtained.
+b. Describe the main idea of ridge regression.
+```
+
+
+```{r}
+
+```
+
+
+<b>Problem 3. 5 pt. </b> <p>
+
+
+```
+a. Fit a lasso model on the training set, with lambda chosen by cross-validation. Report the test error obtained, along with the number of non-zero coefficient estimates.
+b. What is the difference between ridge and lasso regression?
+```
+
+<b>Problem 4. 7 pt. </b> <p>
+
+```
+a. Find the best elastic net regression with alpha chosen by cross-validation.
+b. Is there much difference among the test errors resulting from these four approaches. Which one is the best?
+```
+
+<b> Bonus 2 pt. </b>
+
+```
+Is there any relationship between the variance of ridge estimation and the variance of OLS estimation? Show/prove it.
+```

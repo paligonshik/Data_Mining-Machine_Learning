@@ -1,0 +1,123 @@
+---
+title: "Homework 3"
+author: " "
+date: "February 21, 2019"
+output: html_document
+---
+
+
+<i>For this Homework, you are required to submit both Markdown and HTML files with your answers and code in it. Be sure that the .Rmd file is working, so when I run it, there would be no errors and represent the same information as HTML. Write your code and interpretations under each question. The interpretations of the results need to be written below or above all the charts, summaries, or tables. Do not remove problems from your Markdown file. 
+
+Use biodata.csv dataset uploaded on Moodle to analyze the relationship between the presence of kidney disease and different factors. The description of the variables is given in a separate file. Pay close attention to the names of axes, titles, and labels. </i> <p>
+
+
+
+<b> Problem 1. 2 pt. </b> <p>
+
+Load the file.<p>
+
+Get rid of variables which are irrelevant for logistic regression analysis using function select(). Also, skip variables which are absent in .txt file). 
+<p>
+
+Check whether the data types are correct, if not make appropriate corrections assigning labels to each level according to the data description. <p>
+
+For all **numeric** variables replace missing values by column mean. <p>
+Create new dataset without missing data (remove observations with missing values for **categorical** variables) <p>
+
+How many variables and observations do you have before and now?
+
+```{r}
+
+```
+
+
+<b> Problem 2. 3 pt. </b> <p>
+
+a. Check the relationship between each numeric variable and the presence of kidney disease. Save only the two most important numeric variables using boxplots. Comment on it. <p>
+
+b. Use the glm() function to perform a logistic regression with Class as the response and one of **numeric** variables as the predictor (use results of 2a). Use the summary() function to print the result. Is your explanatory variable significant? Why? <p>
+
+c. Plot the response and the predictor, and sigmoid line. For this task, you should create a sequence of x values and predict your model for them, then add to your graph <p>
+
+
+```{r}
+
+```
+
+
+
+
+
+<b> Problem 3. 4 pt. </b> <p>
+Use the glm() function to perform a logistic regression with Class as the response and one of **categorical** variables as the predictor (chose significant one). Use the summary() function to print the results. <p>
+
+a. Interpret the coefficients of the explanatory variable in terms of absolute and exponential values? <p>
+b. Compute probability for the base value of your explanatory variable. Comment on it. <p>
+c. What do Null deviance and residual deviance of summary output mean? <p>
+d. Calculate the value of the exponent of the b1 coefficient using only your data and functions addmargins() and table(). <p>
+
+
+
+```{r}
+
+```
+
+
+
+
+
+
+<b> Problem 4. 4 pt. </b> <p>
+
+a. Use the full data set to perform the model with Class as a dependent variable. Use the stepAIC() function to obtain the best model based on AIC criteria. Use the backward selection procedure. Do not show the output.<p>
+
+b. Remove all non-significant variables from the last model. Show only the best model(all variables must be significant at least at the level 0.01). Use the summary() function to print the result. <p>
+
+c. Pick your own new observation and predict the y value. Comment on it. <p>
+
+d. Is it possible to calculate R square for logistic regression? <p>
+
+```{r}
+```
+
+
+
+
+
+
+<b> Problem 5. 7 pt. </b> <p>
+
+a. Divide the data frame into Train and Test sets (70:30), such that the proportion for training and testing sets must refer to the proportion of whole data. Do not forget about the set.seed() function.<p>
+
+b. Now fit two logistic regression models using training data. Both models should be the result of Problem 4a. and Problem 4b. <p>
+
+c. For the first model (which contains only significant coefficients) predict the probability of the presence of chronic kidney disease for testing set. Compute the confusion matrix using table() function. Figure out the overall fraction of correct predictions, sensitivity, and specificity for the held out data using only confusion matrix. Check your computations using the function confusionMatrix(). <p>
+
+d. Explain what the confusion matrix is telling you about the types of mistakes made by logistic regression. <p> 
+
+e. What is the difference between the ROC and the precision-recall curve (PRC)? When do we need to consider PRC? Why? Plot the PRC if it is applicable to your models?<p>  
+
+f. Plot ROC curve for both models using the function ggroc {pROC}. Which models is the best? Why? <p>
+
+```{r}
+
+```
+
+
+
+
+
+<b> Bonus. 2 pt </b> <p>
+While evaluating the goodness of fit of the first model I used the Hosmer-Lemeshow test. The Chi-square value of 9.156 is displayed on my output. Try to calculate this number without any extra libraries. Do not use the same functions which are written in Hosmer-Lemeshow test in R.  **Hint:** Firstly you should understand the meaning of this test. I leave the first part of my code to obtain the same result and to help you solve the problem.  
+
+![](Capture.PNG)
+
+```{r}
+
+```
+
+
+
+
+
+<b>Please, make brief and meaningful conclusions.<b>

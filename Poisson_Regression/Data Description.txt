@@ -1,0 +1,17 @@
+N = 2500
+K = 10
+
+1. id_num -- ID of Respondent.
+2. date -- Survey conducting day.
+3. awards -- The number of awards earned by students during high school. {num}
+4. math -- The score of their final math exam. {num - [0, 90]}
+5. physics -- The score of their final physics exam. {num - [0, 90]}
+6. hpw -- Hours spent on studying per week. {num}
+7. gender -- 0:male, 1:female {bin}
+8. imp -- Importance of getting an award.
+	1: Not Important - 4: Very Important {ord}
+9. school -- Types of Schools: 
+         0: Public, 1: Private {bin}
+10. prog -- Type of program in which the students were enrolled.
+  0 : General, 1 : Pre-Academic, 2 : Academic 3 : Vocational    {nominal}
+

@@ -1,0 +1,67 @@
+---
+title: "Naive Bayes"
+author: "Arman Aghamyan"
+date: "May 9, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(caret)
+library(ROCR)
+library(e1071)
+
+
+income_yes=c(60,70,75,100,120,125,200,220,250)
+mean(income_yes)
+sd(income_yes)
+
+income_no=c(50,85,90,150,180)
+mean(income_no)
+sd(income_no)
+
+
+P_income_yes=pnorm(158,135.556,70.42036)
+P_income_no=pnorm(158,111,52.72571)
+P_income_yes
+P_income_no
+
+# P(Hone Owner: Yes, Marital Status: Single, Annual Income: 158)  
+
+
+
+ 
+P_h_no=(5/14)*(1/5)*(2/5)*(81/100)
+P_h_no
+P_h_yes=(9/14)*(5/9)*(2/9)*(62/100)
+P_h_yes
+P_h_no < P_h_yes
+
+# so in this case we would predict yes
+
+```
+A)
+
+P(c|x)=P(c|x)*P(c)/P(x)
+
+
+P(c|x) is the posterior probability of class (c, target) given predictor (x, attributes).
+P(c) is the prior probability of class.
+P(x|c) is the likelihood which is the probability of predictor given class.
+P(x) is the prior probability of predictor.
+
+As P(x) is the same for all categories it can be ignored and we maximize only P(c).
+
+B) Prediction is yes, because probability of h_yes was higher than h_no.
+
+            no     yes   sum
+owner        5      1     6  
+
+not owner    4      4     8
+
+sum          9      5    14
+
+
+
+
+
+

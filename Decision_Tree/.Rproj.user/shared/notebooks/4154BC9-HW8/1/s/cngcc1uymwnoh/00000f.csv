@@ -1,0 +1,2 @@
+"0","model<-rpart(yesno~.,data = train,minbucket=nrow(train)*0.25)"
+"0","prp(model)"

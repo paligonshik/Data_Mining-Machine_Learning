@@ -1,0 +1,284 @@
+---
+title: "Poisson Regression"
+author: "Vazgen Tadevosyan"
+date: "March 7, 2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+For this Homework, you are required to submit both Markdown and HTML files with your answers and code in it. Be sure that the .Rmd file is working, so when I run it, there would be no errors and represent the same information as HTML. Write your code and interpretations under each question. The interpretations of the results need to be written below or above all the charts, summaries, or tables. Do not remove problems from your Markdown file. 
+
+Use awards.csv dataset uploaded on Moodle to analyze the relationship between the target variable and different factors. The description of the variables is given in a separate file. Pay close attention to the names of axes, titles, and labels. <p>
+```{r, message=FALSE}
+library(ggplot2)
+library(tidyr)
+library(data.table)
+library(gridExtra)
+library(MASS)
+library(AER)
+library(dplyr)
+```
+
+
+
+<b> Problem 1. 2 pt. </b> <p>
+
+* Load the file. 
+
+* Use the function str() to understand the structure of your data.
+
+* Get rid of variables that are irrelevant for Poisson regression analysis using function select(). 
+
+* Pay attention to the last column of your data. Use the separate() function to solve the problem based on data description.
+
+* Check whether the data types are correct, if not, make appropriate corrections, assigning labels to each level according to the data description. 
+
+* Use the glimpse() function to see the structure of the final data.
+
+
+
+
+```{r ,message=FALSE}
+df<-read.csv("awards.csv")
+str(df)
+
+df<-df %>% dplyr::select(-c(X,id_num,date))
+#sapply(df, function(x) sum(is.na(x)))
+#summary(df)
+df<-separate(df,school.prog,c("School", "Program"),sep="/")
+df$imp<-ordered(df$imp,levels=c(1,2,3,4),labels=c('Not important','Neutral','Important','Very important'))
+df$School<-factor(df$School)
+df$Program<-factor(df$Program,levels = c(0,1,2,3),labels = c("General","Pre-Academic","Academic","Vocational"))
+df<-df[!df$hpw<0,]
+glimpse(df)
+```
+
+
+
+
+
+
+
+<b> Problem 2. 4 pt. </b> <p>
+
+a. Find your dependent variable for Poisson regression analysis. Plot the histogram of your target variable. Calculate the unconditional mean and variance of your target variable. What can you notice?
+```{r ,message=FALSE}
+#summary(df[which(unlist(lapply(df,is.numeric)))])
+ggplot(df,aes(awards))+geom_histogram( col="red", fill="green", alpha=.2)+ggtitle("Histogram of Awards")
+var(df$awards)
+mean(df$awards)
+
+```
+<br>
+*Our dependent variable is Awards as it is only count variable in our dataset.<br>Variance and mean of variable awards are close to each other.*
+<br>
+b. Find the  **categorical** variables which affect your target variable using boxplots. Comment on it. 
+
+```{r fig.height = 8, fig.width = 12,message=FALSE}
+g1=ggplot(data = df, aes(x = gender, y = awards,color=gender))+
+  geom_boxplot()+
+  scale_x_discrete(labels= levels(df$gender))+
+  stat_summary(fun.y = "mean",geom = 'point',col='red', shape=17, size=4)+ 
+  labs(title ="Relationship between Awards and Gender" ,y='Awards',x="Gender",color="Gebder")+theme(plot.title = element_text(hjust = 0.5))
+g2 = ggplot(data = df, aes(x = imp, y = awards,color = imp))+
+  geom_boxplot()+
+  scale_x_discrete(labels= levels(df$imp) )+
+  stat_summary(fun.y = "mean",geom = 'point',col='blue', shape=12, size=4)+
+  labs(title ="Relationship between Awards and Importance" ,color =  "Awards",y='Awards',x="Importance of getting an award.")+theme(plot.title = element_text(hjust = 0.5))
+g3<-ggplot(data = df, aes(x = Program, y = awards,color = Program))+
+  geom_boxplot()+facet_grid(.~School)+
+  scale_x_discrete(labels= levels(df$Program) )+
+  stat_summary(fun.y = "mean",geom = 'point',col='blue', shape=12, size=4)+
+  labs(title ="Relationship between Awards and Program by School" ,color =  "Program",y='Awards',x="Program")+theme(axis.text.x = element_text(angle = 90, hjust = 1))
+grid.arrange(g1, g2,g3,nrow=2)
+```
+<br>*It seems all categorical variables except Program  affect our dependent variable.From the plot we can conclude that levels male(gender),important and very important(imp), Public(School) affect variable Awards positively meaning it is more likely  to have  more awards  when a person belongs to  one of this levels  than when he/she does not.*
+
+
+
+<br>
+c. Use group_by() and summarise() functions to conclude about conditional variances and the means of your target variable grouped by categorical variables. Comment on it: do you have the problem of overdispersion?
+```{r ,message=FALSE}
+df%>%group_by(gender)%>%
+  summarise(var=var(awards),mean=mean(awards))
+df%>%group_by(imp)%>%
+  summarise(var=var(awards),mean=mean(awards))
+df%>%group_by(School)%>%
+  summarise(var=var(awards),mean=mean(awards))
+df%>%group_by(Program)%>%
+  summarise(var=var(awards),mean=mean(awards))
+
+
+```
+<br>*It seems there is  no overdispersion as most of cases  observed variation is less than  the expected variance(mean in this case).*
+
+<br>
+d. Why Poisson regression is called log-linear?<br>
+ *A log-linear model is a mathematical model that takes the form of a function whose logarithm equals a linear combination of the parameters of the model, which makes it possible to apply (possibly multivariate) linear regression.Poisson regression assumes the response variable Y has a Poisson distribution, and assumes the logarithm of its expected value can be modeled by a linear combination of unknown parameters. Here is the formula.*
+ 
+
+
+
+<b> Problem 3. 7 pt. </b> <p>
+
+a. Use the glm() function to perform an intercept-only Poisson regression model with your chosen (see Problem 2) target variable as the response. Use the output of your model to calculate the mean of your target variable.
+```{r ,message=FALSE}
+intercept_only<-glm(awards~1,data = df,family = poisson(link = log))
+summary(intercept_only)
+mean(df$awards)
+exp(intercept_only$coefficients)
+```
+
+
+b. Exclude from full model variables with insignificant coefficients. Show the result. Explain the meanings of coefficients of your model (at least one numeric and one categorical).
+
+```{r ,message=FALSE}
+final_model<-glm(awards~.-Program-School,data = df,family = poisson(link = log))
+summary(final_model)
+exp(coef(final_model))
+```
+<br>*1 unit increase in math test would increase expected number of awards  by a 1.5%, while holding all other variables in the model constant.<br>Males compared to females, are expected to have 1,12 times more awards while holding the other variable constant in the model.*
+$$\log(\lambda)=\beta_0+\beta_1X $$
+<br>
+
+c. Pick your own new observation and predict the lambda. Comment on it.
+
+```{r ,message=FALSE}
+options(scipen=999)
+predict(final_model,newdata=data.frame(math=mean(df$math),physics=mean(df$physics),hpw=mean(df$hpw),gender="male",imp="Very important",School="Private",Program="General"),type = "response")
+
+```
+<br>*An expected number of awards is 3.679907 for a  male who got average scores of tests and it is very important for him to get an award.*
+
+
+<br>d. Calculate the probability of having more than 15 awards using your predicted lambda from Problem 3 c.
+```{r}
+ppois(15,lambda = 3.679907,lower.tail = F)
+
+```
+
+<br>*Probability of getting more than 15 awards for such a person is very small(0.000001).*
+
+<br>e. Formulate Null and Alternative hypotheses for chi-squared and deviance test. Do it both mathematically and with explanation. Conclude about goodness of fit for the full model (with significant coefficients) using chi-squared and deviance tests. 
+
+$$\chi^2 = \sum_{i=1}^{n} \frac {(y_i - \lambda_i)^2}{\lambda_i}=\sum_{i=1}^{n}\Bigg[\frac {(y_i - \lambda_i)}{\sqrt\lambda_i}\Bigg]^2$$
+$\Bigg[\frac {(y_i - \lambda_i)}{\sqrt\lambda_i}\Bigg]$ *is called Pearson residual.*
+
+- *Where y is actual number for the dependent variable.*
+-  $\lambda_i=e^{x_1\hat\beta}$ *is the predicted value using Poission regression.*
+*So, smaller  number of $\chi^2$ indicates that predicted and actual values are close to each other, thus better the model fits the data.*
+
+$H_0 :The\   model \ fits\ the \ data\ well\ y_i=\lambda_i$<br>
+$H_1 :The\   model \ doesn`t\ fits\ the \ data\ well\ y_i\neq\lambda_i$<br>
+$if\ \chi^2>\chi^2critcal\ then\ we\ reject\ H_0$
+
+```{r ,message=FALSE}
+degree_of_f<-df.residual(final_model)
+chi_sq<-sum(resid(final_model,type="pearson")^2)
+pchisq(chi_sq,df=degree_of_f,lower.tail = F)
+```
+<br>*We fail to reject* $H_0$ *so model fits well.*
+
+*Another way to make assumption for goodnes of fit is to look Deviance statistics.*
+
+$$D=2*\sum_{i=1}^{n}\Bigg[y_ilog\bigg(\frac {y_i}{\lambda_i}\bigg)-(y_i-\lambda_i) \Bigg]$$
+*If the model fits well the observed values $y_i$ will be close to their predicted means $\lambda_i$. Thus deviance will be small.*
+$H_0 The\ model\ fits\ the\ data\ well\ D=0$<br>
+$H_1 The\ model\ doesn`t\ fits\ the\ data\ well\ D\neq0$
+*In this case we compare our specified model with saturated model where all predicted values exactily match actual values.*
+
+
+```{r ,message=FALSE}
+pchisq(q=375.42,df=2491,lower.tail = F)#numbers are from summary.
+
+```
+<br>*We fail to reject* $H_0$ *as p-values is less than* $\alpha$(0.05).
+<br>
+
+<b> Problem 4. 7 pt. </b> <p>
+
+a. What is the equidispersion in Poisson regression? Why do we need to avoid overdispersion? 
+<br>
+*The only parameter the mean occurence rate* $\lambda_I$ *describes mean and variance of <br>the distribution at the same time:*
+$$E(Y_i) = VAR(Y_i) = Î»_i$$
+*This phenomenon is called equidispersion.`*
+*When we have overdispersion we cannot use anymore Poisson regression as it will not provide proper values for significant tests.  An alternative model with additional free parameters may provide a better fit.*
+
+<br>
+b. Add to your data a new (created) variable with the problem of unconditional overdispersion. Show the problem by computing the average and variance of your variable. (Your variable needs to have a similar meaning to your target variable.). 
+
+```{r ,message=FALSE}
+set.seed(1)
+df$articles<-rnbinom(nrow(df),mu=5,size = 1)
+var(df$articles)
+mean(df$articles)
+```
+<br>*Now there is a new generated count variable in the dataframe representing number of articles written by students, where variance of number of atricles is bigger than average of it.*
+
+
+<br>c. Plot the histogram of your created variable grouped by a nominal variable. Does your variable have conditional overdispersion with the nominal variable in your data?
+
+```{r}
+ggplot(df)+geom_histogram(aes(articles))+facet_grid(.~gender)+ggtitle("Histograms of Articles for each Gender")
+```
+<br>*It seemts that  articles is distributed similarly for each level, so there is not  conditional overdispersion*
+<br>
+d. Run the model with the new variable as a response. Your model must contain only significant coefficients.
+
+
+```{r}
+new_model<-glm(articles~.-Program-physics-gender-School-hpw,data = df,family = poisson(link = log))
+summary(new_model)
+```
+
+
+e. Use the function dispersiontest to find out overdispersion. Formulate Null and Alternative hypotheses for trafo=Null (mathematically and explain it). Do you have an overdispersion?
+
+
+```{r ,message=F}
+
+dispersiontest(new_model,trafo = NULL,alternative = "greater")
+```
+$$Var(y_i|x_I)=(1+a)*\lambda_i$$
+$$H_0:There\ is\ not overdispersion\  a\le0 \\ H_1:There\ is\ overdispersion\ a>0$$
+<br>*P-values is a very small number so we reject $H_0$ and we can cliam that there is overdispersion.*
+<br>
+f. Run the negative binomial and quasi-Poisson model. Show only coefficients. Find the best model based on deviance and AIC. Which is the best model? 
+
+
+```{r, message=F}
+
+mod_q<-glm(articles~.-Program-physics-gender-School-hpw, data = df,family = quasipoisson(link = log))
+mod_n<-glm.nb(articles~.-Program-physics-gender-School-hpw, data = df)
+data.frame(coef(mod_q),coef(mod_n))
+coef(mod_q)
+coef(mod_n)
+
+data.frame(deviance(new_model),deviance(mod_q),deviance(mod_n))
+data.frame(deviance(new_model),deviance(mod_q),deviance(mod_n)) 
+mod_n$aic
+new_model$aic
+```
+<br>*The best model is Negative binomial model as values of  AIC and Deviance<br>were the least ones.*
+
+<br>
+g. Why does not quasi-Poisson model have AIC?
+
+
+$$AIC=2k-2ln(\hat{L})$$
+k is number of predictor and L is $\hat{L}$ be the maximum value of the likelihood function for the model.
+*AIC is calculated using  log-likelihood function ,however quasi-Poisson model does not use log likelihood estimation it use quasi-likelihood , so it does not provide AIC score.*
+The quasi-likelihood approach is based on this fact, requiring that only the mean and variance of the distribution be specified. And then the quasi-likelihood estimates are obtained through the solution of the likelihood equations for GLMs. As focusing in the quasi-Poisson model, a dispersion parameter is included, giving us:
+$V(\mu) = \phi \mu$
+This new parameter can be estimated with:
+$\hat \phi = \frac{X^2}{n - p}$
+where $X^2 = \frac{\sum_{i = 1}^{n}(y_i - \hat \mu_i)^2}{V(\hat \mu_i)}$
+This means that que quasi-Poisson model is equivalent to a Poisson model, with the $\hat \beta$
+standard errors multiplied by $\sqrt(\hat\phi)$But it's not exactly Poisson because we do not have the property of mean = variance. This kind of model is usually considered when one wants to account for overdispersion in count data.
+
+###So I think the main difference is  that $\hat\phi)$ which is included in quasilikelihood but not in log-likelihood estimation from which we get AIC.
+
+
+
+<b>Please, make brief and meaningful conclusions.<b>

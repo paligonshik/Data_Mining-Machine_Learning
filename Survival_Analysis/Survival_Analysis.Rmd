@@ -1,0 +1,255 @@
+---
+title: "Survival Analysis"
+author: "Vazgen Tadevosyan"
+date: ' '
+output:
+  pdf_document: default
+  html_document: default
+---
+
+You are required to submit both Markdown and HTML files with your answers and code in it. Do not remove problems from your Markdown file. Please write your name at the beginning of your file into the YAML-header inside of author. 
+
+Data set relevant for this assignment can be found on Moodle. The description of the variables is given in a separate file. 
+
+Good luck!
+
+```
+                                               Task 1   (4 pt.)
+a. Clean and describe the final data. Which of variables can be useful for survival analysis? Why? Which of them can be an event indicator?
+b. What is the difference between interval censored and point censored data?
+c. What are the mail causes of censored data (right-censored)? Why  cannot we ignore censoring, bring and example?
+
+```
+```{r,warning=FALSE,message=FALSE}
+library(ggplot2)
+library(survival)
+library(survminer)
+df<-read.csv("survdata.csv")
+
+str(df)
+df[duplicated(df$studentid),][1] 
+df$X<-NULL
+#sapply(df, function(x) sum(is.na(x)))
+df<-na.omit(df)
+df$bweight<-ifelse(df$bweight==1,"Yes","No")
+factors<-c("alcohol","smoke","region","poverty","race","bweight")
+df$smoke<-ifelse(df$smoke==0,0,1)
+df$alcohol<-ifelse(df$alcohol==0,0,1)
+df[factors] <- lapply(df[factors], factor)
+
+
+```
+a.
+Indicator hospitalization can be event indicator and  with Age Age child had disease can be our survival object.
+Other variables such as wmonth,sfmonth,agepn, smoke,alcohol can also be useful for our survival analysis as they can have an impact on indicator for hospitalization.
+b.
+- Interval censored point - we don't know exactly when some babies were dropped out of study(or lost to be followed or...) for various reasons but we know it was within some interval of time.
+-  point censored data means we know exactly when data point was censored.
+c.
+- Suppose you're conducting a study on pregnancy duration. You're ready to complete the study and run your analysis, but some women in the study are still pregnant, so you don't know exactly how long their pregnancies will last. These observations would be right-censored. The "failure," or birth in this case, will occur after the recorded time.
+It is usually the result of limited resources or competing failure.
+It is important to include the censored observations in our analysis because the fact that these items have not yet failed has a big impact on your reliability estimates.
+For example, when we want to estimate probability of a person to die from cancer given years of illness, we should not ignore  censored data points at that age meaning the people are lost to be followed or did not die at that time because of cancer.
+
+
+```
+                                               Task 2   (6 pt.)
+  Create survival object to solve the task, use the KM method.
+  
+  a. What is the probability of surviving to a certain point in time (baseline model without predictors)? Use n.risk and n.event of summary function to comment on this task. 
+  b. Why is the KM model called non-parametric?
+  c. Plot the survival probability and cumulative hazard functions. Comment on it.
+  d. Add independent variable/s (with more than 2 categories) to your model to create survival curves for different groups. 
+  e. Find the variable with significant differences in survival probabilities. Show the survival plot and add a risk table to the graph. Comment on it.
+                                               
+                                               
+```
+
+```{r}
+surv_obj<-Surv(time = df$chldage,event = df$hospital)
+km<-survfit(surv_obj~1,data=df)
+summary(km)
+
+```
+So, when a baby has disease for a month the probability to not be hospitalized is or to survive is the following.
+$p(1)=1-\frac{21}{3302}=0.994$
+Probability of a baby to survive 2 months is the following.
+$p(2)=(1-\frac{14}{3200})*p(1)=0.989$
+
+b.
+Parametric tests assume underlying statistical distributions in the data. Therefore, several conditions of validity must be met so that the result of a parametric test is reliable. For example assumption about normally distributed data.
+Non parametric tests do not rely on any distribution. They can thus be applied even if parametric conditions of validity are not met. And When no truncation or censoring occurs, the Kaplan-Meier curve is non parametric because we do not have assumption about distribution.
+c.
+
+```{r}
+ggsurvplot(km,fun="cumhaz",conf.int = F)
+```
+<br>As we see probability of event increases while time pasts but not dramatically.
+
+d.
+```{r}
+str(df)
+km_region<-survfit(surv_obj~region,data=df)
+ggsurvplot(km_region, conf.int = F,ylim=c(0.95,1))
+
+
+```
+
+<br>e.
+```{r}
+km_smoke<-survfit(surv_obj~smoke,data=df)
+survdiff(surv_obj~smoke,data = df)
+ggsurvplot(km_smoke,ylim=c(0.95,1),
+           pval = TRUE,
+           conf.int = T,
+           risk.table = TRUE, # Add risk table
+           risk.table.col = "strata", # Change risk table color by groups
+           linetype = "strata", # Change line type by groups
+           surv.median.line = "hv", # Specify median survival, Allowed values include one of c("none", "hv", "h", "v"). v: vertical, h:horizontal.
+           ggtheme = theme_bw()) 
+```
+$H_0: Survival\ curves \ are \ not  \ different$
+$H_1: Survival\ curves \ are   \ different$
+As $p_{value} < \alpha$ we reject $H_0$ and claim that 
+Survival curves are different by smoke group.
+From the plot it is seen that when mother smokes probability of survival of child is decreasing compared with non smoking parent's child.
+
+
+
+
+
+
+
+```
+                                               Task 3   (4 pt.)
+a. Run the ATF model with independent variables (at least one numeric and one categorical). Overall model and coefficients must be significant. Interpret the coefficients.
+b. Make predictions based on your model using quantiles. Why do we not use the predict function?
+c. Plot probability of a hazard and survival. Comment on it.
+
+
+```
+
+
+
+a.
+```{r}
+str(df)
+unique(df$education)
+ATF<-survreg(surv_obj~smoke+education,data = df,dist='exponential')
+summary(ATF)
+exp(coef(ATF))
+```
+The baseline is smoke 0(non smoking mother).
+So when a mother smokes the survival time is decreased by 50 percent.
+One unit increase in years of education increases survival time by 18 percent.
+
+b.
+
+```{r}
+pred<-predict(ATF,type='quantile',p=c(0.1,0.5,0.9))
+
+head(pred)
+```
+There is 10% chance that survival is less than 56.03749
+for first observation.And 50% chance that survival is less than 368.6602 and so on.
+
+When we use predict(type=response) it provides us average of survival time. But it may not be that informative but when we know what type of distribution of survival time is we can calculate probability distribution or Cumulative probability distribution.
+And then we can find probabilities of survival given Time or find time given probabilities.
+
+c. Plot probability of a hazard and survival. Comment on it.
+```{r}
+library(gridExtra)
+time<-1:12
+pred_P<-pexp(time,rate=1/pred[2])
+pred_P<-1-pred_P
+
+g1<-ggplot()+geom_line(aes(x=time,y=pred_P))+
+  labs(title = "Probabiliy of Survival",y="Probability")
+
+g2<-ggplot()+geom_line(aes(x=time,y=-log(pred_P)))+
+  labs(title = "Probabiliy of Hazard",y="Probability")
+grid.arrange(g1, g2,nrow=1)
+```
+
+So while time passes probability of survival decreases and Hazard is increasing.
+
+
+
+
+
+
+```
+                                               Task 4   (6 pt.)
+
+a. Which are the key assumptions of the Cox model?
+b. Run the Cox proportional hazard model with significant coefficients. What does Rsquare show? 
+c. Interpret the coefficients of your model. What does HR indicate?
+d. Check the proportional hazard assumption. Comment on it.
+e. Make predictions with cox model using plots.
+
+```
+
+a.
+The basic Cox model assumes that the hazard functions for 2 different 
+levels of a covariate are proportional for all values of time.
+Proportional Hazard assumption:Hazard Ratio is independent from time.
+
+
+b.
+```{r}
+exp(0)
+colnames(df)
+mod_cox<-coxph(surv_obj~smoke+education+wmonth,data=df)
+summary(mod_cox)
+
+
+```
+The Rsquare here is called a pseudo R square and shows the improvement of the model with predictors compared to the baseline model (no predictors). For pseudo Rsquare the upper limit is not necessary 1.
+The max possible Rsquare is 0.289 in this case and if our R square is close to this number it means the model is good. However, R square is 0.01 which indicates bad fit of model. 
+
+c.
+```{r}
+exp(coef(mod_cox))
+```
+
+The hazard ratio (HR) is the ratio of the hazard rates corresponding to the conditions described by two levels of an explanatory variable of the same time.
+If we two observations where X2,X1  is bigger than by one unit the hazard ratio will be following
+$$HR=\exp(\sum^{n}_{j=1}\beta_j(X_2-X_1)$$
+
+If difference between X2 and x1 is 1 the hazard ratio will be following.
+$HR=\exp(\beta)$
+And if variable is not significant beta will be 0.
+So, $H_0: \exp(\beta)=1 $
+$H_1: \exp(\beta)\neq1 $
+We reject H0 for all variables as p=value is less than alpha and can claim that all predictors in model are significant.
+Babies whose mother smokes has 90 percent more chance to be hospitalized compares those whose mother is non smoking.
+One unit increase in years of  mother education decrease the hazard by 
+13%.
+One unit increase in Month the child was weaned decrease the hazard by 
+20%.
+
+
+d.
+```{r}
+test_z<-cox.zph(mod_cox,global = T,transform = 'rank')
+test_z
+
+```
+$H0:Hazard\ rates\ are\ proportional$
+$H1:Hazard\ rates\ are\ not\ proportional$
+We fail to reject H0 for all variables so our hazard assumption are met.
+
+e. Make predictions with cox model using plots.
+
+```{r}
+str(df)
+case1<-data.frame(smoke="0",education=13,wmonth=3)
+survivals<-survfit(mod_cox,newdata = case1)
+df1<-data.frame(Probability=survivals$surv,Time=survivals$time)
+df2<-data.frame(Probability=survivals$cumhaz,Time=survivals$time)
+g1<-ggplot(df1,aes(Time,Probability))+geom_point()+ggtitle("Survival Probabilities")
+g2<-ggplot(df2,aes(Time,Probability))+geom_point()+ggtitle("Cumulative Hazard Probabilities")
+grid.arrange(g1, g2,nrow=1)
+
+```
+

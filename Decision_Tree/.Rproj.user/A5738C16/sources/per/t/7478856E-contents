@@ -1,0 +1,193 @@
+---
+title: "HW8"
+author: "Anna Khachatryan "
+date: "April 28, 2019"
+output: html_document
+---
+<i>
+You are required to submit both Markdown and HTML files. Data set (Spam E-mail Data) relevant for this assignment can be found in the R package "DAAG". 
+</i>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(DAAG)
+library(rpart)
+library(rpart.plot)
+library(rattle)
+library(dplyr)
+library(caret)
+library(ROCR)
+```
+
+----------------------------------------
+Problem 1 (7 pt.)
+
+Consider the training examples shown in the table for a binary classification problem: <br>
+
+![](Capture.PNG)
+<p>
+a.  What is the best split (between a1 and a2) according to the classification error rate? Show calculations in R.
+b. What is the best split (between a1 and a2) according to the Gini index? Show calculations in R. Which attribute would the decision tree algorithm choose? Why?
+c. Why does not entropy start with 0?
+d. Why DT is called a greedy algorithm?
+
+----------------------------------------
+```{r}
+a1 <- c("T","T","T","F","F","F","F","T","F")
+is.character(a1)
+a2 <- c("T","T","F","F","T","T","F","F","T")
+is.character(a2)
+a3 <- c(1,6,5,4,7,3,8,7,5)
+targetclass <- c(1,1,0,1,0,0,0,1,0)
+targetclass <- as.factor(targetclass)
+df <- data.frame(a1, a2, targetclass)
+df
+str(df)
+
+```
+
+```{r}
+TT <- c(2, 0)
+TF <- c(1, 1)
+FT <- c(0, 3)
+FF <- c(1, 1)
+
+df1 <- data.frame(TT, TF, FT, FF)
+df1
+
+error_rate <-  2/9
+error_rate
+```
+
+<b>
+a.Split_1 a1=F then 0, else 1 - 2 misclassified cases
+<br>
+
+```{r}
+Split1_Gini <- 5/9*(1-(4/5*4/5)-(1/5*1/5))+4/9*(1-(3/4*3/4)-(1/4*1/4))
+round(Split1_Gini,2)
+
+Split2_Gini <- 5/9*(1-(3/5*3/5)-(2/5*2/5))+4/9*(1-(2/4*2/4)-(2/4*2/4))
+round(Split2_Gini, 2)
+```
+
+
+<b>
+b.Split1 has better gini index: Split 1 with a1=F then 0 else 1  
+Algorithm would choose Split2 with a2=T as it places the best attribute of the dataset at the root of the tree.
+
+c. entropy is 0 only in cases when we have all the data under 1 class, the most pure case.In our example both variables have data belonging to both clases, thus entropy is different from Null.
+
+d.DT algorithm makes the optimal choice at each step as it attempts to find the overall optimal way to solve the entire problem.
+<br>
+
+
+Problem 2 (6 pt.)
+
+a. Suppose the sysadmin wants to understand and predict the process of recognizing the emails as spam for new e-mails which make up 10% of your initial data. Use the full decision tree algorithm to solve this task. Show your tree and interpret the results. <br>
+b. How many observations have your smallest node? Set the minimum number of observations in any terminal node 25% of the number of your initial data. Show the tree. Why do we need the arguments minbucket
+and minsplit?<br>
+c. Which are the advantages and disadvantages (at least 2 of each) of the DT algorithm? 
+
+```{r include=FALSE}
+data("spam7")
+str(spam7)
+levels(spam7$yesno) <- c("No", "Yes")
+```
+
+```{r}
+set.seed(1)
+trainindex<- createDataPartition(spam7$yesno, p = .9, list = FALSE)
+train <- spam7[trainindex,]
+test <- spam7[-trainindex,]
+```
+
+
+```{r}
+model <- rpart(yesno~., data= train)
+prp(model, type = 2, extra = 1, main = "Number of observations that fall in the node per class")
+
+model_min <- rpart(yesno~., minsplit=nrow(spam7)*0.25, data= train)
+prp(model_min, type = 2, extra = 1, main = "Number of observations that fall in the node per class with / min set-up")
+
+```
+
+
+<b>
+a. we have created a decision tree by taking e mail spam indicator (yes/no) as a dependent variable. Fina tree has 1 root node, 5 child notes & 7 leaf notes. 
+
+b.the smallest node with the initial tree has 43 observations in total. 
+We need the arguments minsplit and minbucket do not allow tree to grow much and 
+avoids the problem of overfiting
+
+c. advantages: Is simple to understand and interpret.2. Creates a comprehensive analysis of the consequences along each branch and identifies decision nodes that need further analysis.
+disadvantages: 1.Information gain in a decision tree with categorical variables gives a biased response for attributes with greater no. of categories. 2.Calculations can become complex when there are many class labels.
+<br>
+----------------------------------------
+
+
+Problem 3 (7 pt.)
+
+a. Make predictions based on both models.
+b. Compare the models using the function confusionMatrix() and their results, ROC curve, and AUC. Which does perform better? Why? 
+c. What is the difference between regression and classification trees (in terms of the loss function, prediction, and type of dependent variable)?
+
+```{r}
+
+pred_class <- predict(model, test, type = "class")
+pred_class[1:20]
+
+confusionMatrix(pred_class, test$yesno, positive = "Yes")
+pred_prob <- predict(model, test)
+pred_prob[1:10,]
+
+P_Test <- prediction(pred_prob[,2], test$yesno)
+perf <- performance(P_Test, "tpr", "fpr")
+
+```
+
+```{r}
+pred_class_min <- predict(model_min, test, type = "class")
+pred_class[1:20]
+
+confusionMatrix(pred_class_min, test$yesno, positive = "Yes")
+pred_prob_min <- predict(model_min, test)
+pred_prob_min[1:10,]
+
+P_Test_min <- prediction(pred_prob_min[,2], test$yesno)
+perf_min <- performance(P_Test_min, "tpr", "fpr")
+
+```
+
+```{r}
+
+plot(perf)
+
+performance(P_Test, 'auc')@y.values
+
+plot(perf_min)
+
+performance(P_Test_min, 'auc')@y.values
+
+```
+
+<b>
+
+b. full model with no minimum observation restriction in terminal nodes is performing better both by accuracy and confusion matrix other parameters, as well as ROC curve and AUC results.
+c. differences between regression and decision trees are the following:
+dependent variable - categorical for decision tree and numberic or continous for regression.
+loss function - for DT Loss = Misclassification rate, For regression problem: regression error.
+prediction -  regression is used to predict a quantitative response rather than a qualitative one.
+
+----------------------------------------
+Bonus 1 (2 pt.)
+
+Bring an example of a data set that cannot be partitioned effectively by a DT algorithm using test conditions involving only a single attribute. How can you overcome this difficulty?
+
+This are the case with equal probability (50%). Add additional attribute. 
+
+Bonus 2 (2 pt.)
+
+How to calculate the out-of-bag error rate.
+What is the difference between out-of-bag error and test error in Random Forest?
